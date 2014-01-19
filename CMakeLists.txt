@@ -16,6 +16,17 @@ include(${Slicer_USE_FILE})
 
 find_package(Git REQUIRED)
 
+#-----------------------------------------------------------------------------
+option(${EXTENSION_NAME}_SUPERBUILD "Build ${EXTENSION_NAME} and the projects it depends on via SuperBuild.cmake." ON)
+mark_as_advanced(${EXTENSION_NAME}_SUPERBUILD)
+if(${EXTENSION_NAME}_SUPERBUILD)
+  if(NOT OpenCV_DIR)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild.cmake")
+    return()
+  endif()
+endif()
+
+find_package(OpenCV REQUIRED)
 
 #-----------------------------------------------------------------------------
 set(MODULE_NAME EndoscopeCalibration)
@@ -36,6 +47,7 @@ set(MODULE_INCLUDE_DIRECTORIES
   ${CMAKE_CURRENT_BINARY_DIR}/Logic
   ${CMAKE_CURRENT_SOURCE_DIR}/Widgets
   ${CMAKE_CURRENT_BINARY_DIR}/Widgets
+  ${OpenCV_INCLUDE_DIRS}
   )
 
 set(MODULE_SRCS
@@ -57,6 +69,7 @@ set(MODULE_UI_SRCS
 set(MODULE_TARGET_LIBRARIES
   vtkSlicer${MODULE_NAME}ModuleLogic
   qSlicer${MODULE_NAME}ModuleWidgets
+  ${OpenCV_LIBRARIES}
   )
 
 set(MODULE_RESOURCES

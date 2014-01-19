@@ -18,13 +18,20 @@
 #ifndef __qSlicerEndoscopeCalibrationModuleWidget_h
 #define __qSlicerEndoscopeCalibrationModuleWidget_h
 
+// OpenCV includes
+#include "cv.h"
+#include "highgui.h"
+
 // SlicerQt includes
 #include "qSlicerAbstractModuleWidget.h"
-
 #include "qSlicerEndoscopeCalibrationModuleExport.h"
+
+// Qt includes
+#include <qtimer.h>
 
 class qSlicerEndoscopeCalibrationModuleWidgetPrivate;
 class vtkMRMLNode;
+class QTimer;
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class Q_SLICER_QTMODULES_ENDOSCOPECALIBRATION_EXPORT qSlicerEndoscopeCalibrationModuleWidget :
@@ -37,10 +44,15 @@ public:
   typedef qSlicerAbstractModuleWidget Superclass;
   qSlicerEndoscopeCalibrationModuleWidget(QWidget *parent=0);
   virtual ~qSlicerEndoscopeCalibrationModuleWidget();
+    
+  // for timer loop to refresh obtained video images
+  QTimer *t;
+  int timerFlag;
 
 public slots:
-
-
+  void onVideoONToggled(bool checked);
+  void timerIntrupt();
+    
 protected:
   QScopedPointer<qSlicerEndoscopeCalibrationModuleWidgetPrivate> d_ptr;
   
