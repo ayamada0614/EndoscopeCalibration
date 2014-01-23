@@ -77,6 +77,12 @@ void qSlicerEndoscopeCalibrationModuleWidget::setup()
   this->timerFlag = 0;
   connect(t,SIGNAL(timeout()),this,SLOT(timerIntrupt()));
     
+  // video import
+  this->capture = NULL;
+  this->bgr_frame = NULL;
+    
+  // default video refresh interval
+  this->videoRefreshInterval = 50; //(msec) 1000msec = 1s
     
 }
 
@@ -87,9 +93,37 @@ void qSlicerEndoscopeCalibrationModuleWidget::timerIntrupt()
     
     if(this->timerFlag == 1)
     {
-        //this->CameraHandler();
+        this->CameraHandler();
     }
     
+}
+
+//-----------------------------------------------------------------------------
+int qSlicerEndoscopeCalibrationModuleWidget::CameraHandler()
+{
+    Q_D(qSlicerEndoscopeCalibrationModuleWidget);
+
+
+    if (((this->bgr_frame = cvQueryFrame(this->capture)) != NULL)/* && checked*/)
+    {
+      // Display image on OpenCV window
+      cvShowImage( "Endoscope calibration", this->bgr_frame);
+      char c = cvWaitKey(33);
+      if( c == 27 )
+      {
+          this->timerFlag = 0;
+
+          d->VideoON->setChecked(false);
+          d->VideoOFF->setChecked(true);
+          
+          cvReleaseCapture(&capture);
+          cvDestroyWindow( "Endoscope calibration" );
+          
+          //break;
+      }
+    }
+    
+    return 1;
 }
 
 //-----------------------------------------------------------------------------
@@ -99,34 +133,27 @@ void qSlicerEndoscopeCalibrationModuleWidget::onVideoONToggled(bool checked)
     
     if(checked)
     {
-        CvCapture* capture;
+
+        // QTimer start
+        if( t->isActive())
+            t->stop();
+        this->timerFlag = 0;
+        t->start(this->videoRefreshInterval);
         
         // Open /dev/video0
-        capture = cvCaptureFromCAM(0);
+        this->capture = cvCaptureFromCAM(0);
         
-        assert( capture != NULL);
+        assert( this->capture != NULL);
         
-        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, 240);
-        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, 320);
-        cvSetCaptureProperty(capture, CV_CAP_PROP_FPS,30);
+        cvSetCaptureProperty(this->capture, CV_CAP_PROP_FRAME_HEIGHT, 240);
+        cvSetCaptureProperty(this->capture, CV_CAP_PROP_FRAME_WIDTH, 320);
+        cvSetCaptureProperty(this->capture, CV_CAP_PROP_FPS,30);
         
-        IplImage* bgr_frame = cvQueryFrame( capture );
-        
+        this->bgr_frame = cvQueryFrame(this->capture);
         cvNamedWindow( "Endoscope calibration", CV_WINDOW_NORMAL);
-        
-        while( ((bgr_frame = cvQueryFrame( capture )) != NULL) && checked)
-        {
-            // Display image on OpenCV window
-            cvShowImage( "Endoscope calibration", bgr_frame);
-            char c = cvWaitKey(33);
-            if( c == 27 ) break;
-        }
-        
-        d->VideoON->setChecked(false);
-        d->VideoOFF->setChecked(true);
-        
-        cvReleaseCapture(&capture);
-        cvDestroyWindow( "Endoscope calibration" );
+
+        this->timerFlag = 1;
+
     }
 }
 

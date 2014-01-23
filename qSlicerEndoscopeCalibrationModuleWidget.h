@@ -48,6 +48,13 @@ public:
   // for timer loop to refresh obtained video images
   QTimer *t;
   int timerFlag;
+    
+  int videoRefreshInterval;
+  int CameraHandler();
+  
+  // video import
+  CvCapture* capture;
+  IplImage* bgr_frame;
 
 public slots:
   void onVideoONToggled(bool checked);
